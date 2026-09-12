@@ -1,0 +1,290 @@
+'use client'
+
+import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function OrderPage() {
+  const router = useRouter()
+  const [meal, setMeal] = useState('veg')
+  const [plan, setPlan] = useState('trial')
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [company, setCompany] = useState('')
+  const [building, setBuilding] = useState('')
+  const [floor, setFloor] = useState('')
+  const [pickupPoint, setPickupPoint] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [orderId, setOrderId] = useState('')
+
+  const price = plan === 'trial' ? '₹299' : '₹1,299'
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    
+    if (!fullName || !phone || !building || !pickupPoint || !startDate) {
+      setError('Please fill in all required fields')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/auth/signup')
+        return
+      }
+
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mealType: meal,
+          planType: plan,
+          building,
+          pickupPoint,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create booking')
+        setLoading(false)
+        return
+      }
+
+      setOrderId(data.booking.orderId)
+      setSubmitted(true)
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
+      setLoading(false)
+    }
+  }
+
+  if (submitted) {
+    return (
+      <main className="order-page">
+        <header className="site-header">
+          <Link href="/" className="brand order-brand">
+            <img
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2005_02_26%20PM-nfLMqUqsIl5jluhhngWFv1fIGayTQN.png"
+              alt="Grandma's Lunchbox logo"
+            />
+            <span>
+              Grandma&apos;s<br />
+              <b>Lunchbox</b>
+            </span>
+          </Link>
+        </header>
+        <div className="order-shell success-box">
+          <span className="success-mark">✓</span>
+          <p className="eyebrow">You&apos;re all set</p>
+          <h1>Order received.</h1>
+          <p>
+            Your order <b>{orderId}</b> is confirmed. You&apos;ll pay ₹{plan === 'trial' ? '299' : '1,299'} on the first day your lunch is delivered.
+          </p>
+          <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+            A confirmation email has been sent to your email address.
+          </p>
+          <Link className="button" href="/">
+            Back home →
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  return (
+    <main className="order-page">
+      <header className="site-header">
+        <Link href="/" className="brand order-brand">
+          <img
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2005_02_26%20PM-nfLMqUqsIl5jluhhngWFv1fIGayTQN.png"
+            alt="Grandma's Lunchbox logo"
+          />
+          <span>
+            Grandma&apos;s<br />
+            <b>Lunchbox</b>
+          </span>
+        </Link>
+        <Link href="/" className="text-link">
+          ← Back home
+        </Link>
+      </header>
+
+      <div className="order-shell">
+        <form className="order-form" onSubmit={handleSubmit}>
+          {error && (
+            <div style={{ padding: '15px', backgroundColor: '#fee', color: '#c33', marginBottom: '20px', borderRadius: '4px' }}>
+              {error}
+            </div>
+          )}
+
+          <fieldset>
+            <legend>
+              01 <span>Choose your meal</span>
+            </legend>
+            <div className="choice-grid">
+              <button
+                type="button"
+                className={meal === 'veg' ? 'choice selected' : 'choice'}
+                onClick={() => setMeal('veg')}
+              >
+                <b>Veg</b>
+                <small>Home-style vegetarian lunch</small>
+              </button>
+              <button
+                type="button"
+                className={meal === 'non-veg' ? 'choice selected' : 'choice'}
+                onClick={() => setMeal('non-veg')}
+              >
+                <b>Non-Veg</b>
+                <small>Home-style lunch with chicken</small>
+              </button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              02 <span>Choose your plan</span>
+            </legend>
+            <div className="choice-grid">
+              <button
+                type="button"
+                className={plan === 'trial' ? 'choice selected' : 'choice'}
+                onClick={() => setPlan('trial')}
+              >
+                <b>5-Day Trial</b>
+                <small>{price} on delivery</small>
+              </button>
+              <button
+                type="button"
+                className={plan === 'monthly' ? 'choice selected' : 'choice'}
+                onClick={() => setPlan('monthly')}
+              >
+                <b>Monthly Plan</b>
+                <small>{price} per month</small>
+              </button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              02 <span>Your details</span>
+            </legend>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Full name</label>
+                <input
+                  type="text"
+                  placeholder="Your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Mobile number</label>
+                <input
+                  type="tel"
+                  placeholder="10-digit mobile number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Email <span style={{ fontSize: '12px', color: '#999' }}>(optional)</span></label>
+                <input
+                  type="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Company</label>
+                <input
+                  type="text"
+                  placeholder="Company name"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>ITPL building</label>
+                <select
+                  value={building}
+                  onChange={(e) => setBuilding(e.target.value)}
+                  required
+                >
+                  <option value="">Select your building</option>
+                  <option value="Building A">Building A</option>
+                  <option value="Building B">Building B</option>
+                  <option value="Building C">Building C</option>
+                  <option value="Building D">Building D</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Floor <span style={{ fontSize: '12px', color: '#999' }}>(optional)</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g. 4th floor"
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Pickup location</label>
+                <select
+                  value={pickupPoint}
+                  onChange={(e) => setPickupPoint(e.target.value)}
+                  required
+                >
+                  <option value="">Select pickup point</option>
+                  <option value="Main Gate">Main Gate</option>
+                  <option value="Reception">Reception</option>
+                  <option value="Cafeteria">Cafeteria</option>
+                  <option value="Parking">Parking</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Start date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '30px', borderTop: '1px solid #e0e0e0' }}>
+            <div>
+              <p style={{ fontSize: '14px', color: '#999', marginBottom: '5px' }}>{meal === 'veg' ? '🥬 Veg' : '🍗 Non-Veg'} {plan === 'trial' ? '5-day trial' : 'Monthly'}</p>
+              <h2 style={{ fontSize: '32px', fontWeight: 'bold', margin: '0', color: '#111' }}>{price}</h2>
+            </div>
+            <button type="submit" className="button" disabled={loading} style={{ padding: '12px 30px', fontSize: '16px' }}>
+              {loading ? 'Processing...' : 'Review & continue →'}
+            </button>
+          </div>
+
+          <p style={{ fontSize: '12px', color: '#999', marginTop: '15px', textAlign: 'center' }}>
+            No payment today. Pay on your first delivery.
+          </p>
+        </form>
+      </div>
+    </main>
+  )
+}
