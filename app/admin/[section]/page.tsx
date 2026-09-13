@@ -11,11 +11,11 @@ const nav = [
 ]
 
 const menuItems = [
-  { day: 'Monday', dish: 'Dal Tadka', side: 'Jeera Rice, Roti', type: 'Veg' },
-  { day: 'Tuesday', dish: 'Paneer Butter Masala', side: 'Rice, Salad', type: 'Veg' },
-  { day: 'Wednesday', dish: 'Chicken Curry', side: 'Rice, Raita', type: 'Non-Veg' },
-  { day: 'Thursday', dish: 'Vegetable Biryani', side: 'Boondi Raita', type: 'Veg' },
-  { day: 'Friday', dish: 'Egg Curry', side: 'Rice, Chapati', type: 'Non-Veg' },
+  { day: 'Monday', dish: 'Rice, Dal Curry, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
+  { day: 'Tuesday', dish: 'Rice, Sambar, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
+  { day: 'Wednesday', dish: 'Rice, Dal Curry, Paneer (Veg) / Chicken (Non-Veg), Chapathi, Curd, Pickle', side: '', type: 'Both' },
+  { day: 'Thursday', dish: 'Rice, Sambar, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
+  { day: 'Friday', dish: 'Rice, Dal Curry, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
 ]
 
 const sections: Record<string, { eyebrow: string; title: string; description: string; stats: [string, string, string][] }> = {

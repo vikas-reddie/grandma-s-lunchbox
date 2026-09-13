@@ -92,8 +92,7 @@ EMAIL_PASSWORD=your-app-password
 EMAIL_FROM=noreply@grandmaslunchbox.com
 
 # Next.js Environment
-NEXT_PUBLIC_API_URL=http://localhost:3000
-NODE_ENV=development
+NODE_ENV=production
 ```
 
 ---
@@ -217,7 +216,7 @@ Headers: `Authorization: Bearer {token}` (admin only)
 
 ### 1. Test Signup
 ```bash
-curl -X POST http://localhost:3000/api/auth/signup \
+curl -X POST "$BASE_URL/api/auth/signup" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -229,7 +228,7 @@ curl -X POST http://localhost:3000/api/auth/signup \
 
 ### 2. Test Login
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
+curl -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -239,20 +238,22 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 ### 3. Create Booking
 ```bash
-curl -X POST http://localhost:3000/api/bookings \
+curl -X POST "$BASE_URL/api/bookings" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "mealType": "veg",
     "planType": "trial",
-    "building": "Building A",
+    "name": "Test User",
+    "phone": "9876543210",
+    "email": "test@example.com",
     "pickupPoint": "Main Gate"
   }'
 ```
 
 ### 4. Get Admin Dashboard
 ```bash
-curl -X GET http://localhost:3000/api/admin/dashboard \
+curl -X GET "$BASE_URL/api/admin/dashboard" \
   -H "Authorization: Bearer ADMIN_TOKEN"
 ```
 
@@ -266,7 +267,7 @@ Email confirmation is sent automatically when a user creates a booking with:
 - Plan type (Trial/Monthly)
 - Price
 - Start date
-- Building & pickup point
+- Pickup point
 
 ---
 
@@ -335,7 +336,7 @@ npm install
 npm run dev
 
 # Access app
-http://localhost:3000
+your Vercel deployment URL
 ```
 
 ---

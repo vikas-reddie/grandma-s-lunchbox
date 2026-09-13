@@ -1,6 +1,12 @@
+import dns from 'node:dns'
 import mongoose from 'mongoose'
 
 let isConnected = false
+
+const dnsServers = process.env.DNS_SERVERS?.split(',').map((server) => server.trim()).filter(Boolean)
+if (dnsServers?.length) {
+  dns.setServers(dnsServers)
+}
 
 export async function connectDB() {
   if (isConnected) {

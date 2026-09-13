@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The `/admin` dashboard is a deliberately marked mock-auth development surface.
+Open the URL shown by Next.js. The `/admin` dashboard requires an admin login.
 
 ## Development payment mode
 
@@ -21,6 +21,6 @@ Razorpay is not configured by default. Checkout clearly marks the gateway as una
 - `app/order`, `app/checkout`, `app/success` — order flow
 - `app/admin` — operations dashboard
 - `app/globals.css` — brand tokens and responsive UI
-- `.env.example` — future app and Razorpay variables
+- `.env.example` — required deployment environment variables
 
 Mock data and service abstractions can be added under `data/` and `lib/services/` as the PostgreSQL implementation is introduced. Keep payment secrets server-only.

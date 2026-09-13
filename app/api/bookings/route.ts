@@ -11,7 +11,9 @@ import { z } from 'zod'
 const createBookingSchema = z.object({
   mealType: z.enum(['veg', 'non-veg']),
   planType: z.enum(['trial', 'monthly']),
-  building: z.string().min(1, 'Building is required'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phone: z.string().regex(/^\d{10}$/, 'Phone must contain exactly 10 digits'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   pickupPoint: z.string().min(1, 'Pickup point is required'),
 })
 
@@ -60,49 +62,40 @@ export async function GET(request: NextRequest) {
 // POST - Create a new booking
 export async function POST(request: NextRequest) {
   try {
+    console.log('[BOOKING] POST request received')
     await connectDB()
+    console.log('[BOOKING] MongoDB connection ready')
 
-    // Get token from Authorization header
+    // A token is optional so customers can place a guest order.
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No authorization token provided' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const decoded = verifyToken(token)
-
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
-    const { mealType, planType, building, pickupPoint } = createBookingSchema.parse(body)
+    console.log('[BOOKING] Request body:', {
+      ...body,
+      password: undefined,
+    })
+    const { mealType, planType, name, phone, email, pickupPoint } = createBookingSchema.parse(body)
 
-    // Get user details
-    const user = await User.findById(decoded.userId)
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+    let user = null
+    if (authHeader?.startsWith('Bearer ')) {
+      const decoded = verifyToken(authHeader.substring(7))
+      if (!decoded) {
+        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
+      }
+      user = await User.findById(decoded.userId)
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      user.pickupPoint = pickupPoint
+      await user.save()
+      console.log('[BOOKING] Authenticated customer:', user._id.toString())
     }
-
-    // Update user building and pickup point
-    user.building = building
-    user.pickupPoint = pickupPoint
-    await user.save()
 
     // Calculate price
     const price = planType === 'trial' ? 299 : 1299
 
     // Generate order ID
-    const orderId = generateOrderId()
+    const orderId = await generateOrderId()
 
     // Calculate end date (trial = 5 days, monthly = 30 days from today)
     const startDate = new Date()
@@ -114,7 +107,7 @@ export async function POST(request: NextRequest) {
     // Create booking
     const booking = new Booking({
       orderId,
-      userId: user._id,
+      ...(user ? { userId: user._id } : {}),
       mealType,
       planType,
       price,
@@ -122,41 +115,52 @@ export async function POST(request: NextRequest) {
       bookingStatus: 'active',
       startDate,
       endDate: planType === 'trial' ? endDate : null,
-      userEmail: user.email,
-      userName: user.name,
-      building,
+      userEmail: email || user?.email || '',
+      userName: user?.name || name,
       pickupPoint,
     })
 
-    await booking.save()
-
-    // Send confirmation email
-    const emailHtml = orderConfirmationTemplate({
+    console.log('[BOOKING] Saving booking:', {
       orderId,
-      userName: user.name,
-      mealType: mealType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian',
-      planType: planType === 'trial' ? '5-Day Trial' : 'Monthly',
-      price: `₹${price}`,
-      startDate: startDate.toLocaleDateString('en-IN', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
-      building,
-      pickupPoint,
+      userId: user?._id?.toString() || 'guest',
+      userName: booking.userName,
+      userEmail: booking.userEmail || '(none)',
+    })
+    await booking.save()
+    console.log('[BOOKING] Booking saved:', {
+      id: booking._id.toString(),
+      orderId: booking.orderId,
     })
 
-    await sendEmail(
-      user.email,
-      `Order Confirmed - ${orderId}`,
-      emailHtml
-    )
+    if (email || user?.email) {
+      const emailHtml = orderConfirmationTemplate({
+        orderId,
+        userName: user?.name || name,
+        mealType: mealType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian',
+        planType: planType === 'trial' ? '5-Day Trial' : 'Monthly',
+        price: `₹${price}`,
+        startDate: startDate.toLocaleDateString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        endDate: endDate.toLocaleDateString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        pickupPoint,
+      })
+      await sendEmail(email || user!.email, `Order Confirmed - ${orderId}`, emailHtml)
+    }
 
     return NextResponse.json(
       {
         message: 'Booking created successfully',
         booking: {
+          id: booking._id,
           orderId: booking.orderId,
           mealType: booking.mealType,
           planType: booking.planType,
@@ -171,7 +175,7 @@ export async function POST(request: NextRequest) {
     console.error('Create booking error:', error)
     if (error.name === 'ZodError') {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.issues?.[0]?.message || 'Invalid booking details' },
         { status: 400 }
       )
     }

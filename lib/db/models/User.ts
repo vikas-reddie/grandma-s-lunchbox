@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IUser extends Document {
+  username?: string
   email: string
   name: string
   phone: string
   password: string
-  building: string
   pickupPoint: string
   role: 'customer' | 'admin'
   createdAt: Date
@@ -14,6 +14,12 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
@@ -32,10 +38,6 @@ const userSchema = new Schema<IUser>(
     password: {
       type: String,
       required: true,
-    },
-    building: {
-      type: String,
-      default: '',
     },
     pickupPoint: {
       type: String,

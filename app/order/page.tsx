@@ -11,9 +11,6 @@ export default function OrderPage() {
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  const [company, setCompany] = useState('')
-  const [building, setBuilding] = useState('')
-  const [floor, setFloor] = useState('')
   const [pickupPoint, setPickupPoint] = useState('')
   const [startDate, setStartDate] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,7 +24,7 @@ export default function OrderPage() {
     e.preventDefault()
     setError('')
     
-    if (!fullName || !phone || !building || !pickupPoint || !startDate) {
+    if (!fullName || !phone || !pickupPoint || !startDate) {
       setError('Please fill in all required fields')
       return
     }
@@ -36,21 +33,19 @@ export default function OrderPage() {
 
     try {
       const token = localStorage.getItem('authToken')
-      if (!token) {
-        router.push('/auth/signup')
-        return
-      }
 
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           mealType: meal,
           planType: plan,
-          building,
+          name: fullName,
+          phone,
+          email,
           pickupPoint,
         }),
       })
@@ -197,9 +192,12 @@ export default function OrderPage() {
                 <label>Mobile number</label>
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
+                  maxLength={10}
                   placeholder="10-digit mobile number"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required
                 />
               </div>
@@ -210,38 +208,6 @@ export default function OrderPage() {
                   placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label>Company</label>
-                <input
-                  type="text"
-                  placeholder="Company name"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label>ITPL building</label>
-                <select
-                  value={building}
-                  onChange={(e) => setBuilding(e.target.value)}
-                  required
-                >
-                  <option value="">Select your building</option>
-                  <option value="Building A">Building A</option>
-                  <option value="Building B">Building B</option>
-                  <option value="Building C">Building C</option>
-                  <option value="Building D">Building D</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Floor <span style={{ fontSize: '12px', color: '#999' }}>(optional)</span></label>
-                <input
-                  type="text"
-                  placeholder="e.g. 4th floor"
-                  value={floor}
-                  onChange={(e) => setFloor(e.target.value)}
                 />
               </div>
               <div className="form-group">

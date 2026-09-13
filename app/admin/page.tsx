@@ -129,7 +129,12 @@ export default function AdminPage() {
   if (error) {
     return (
       <div className="admin-app">
-        <p style={{ padding: '20px', color: 'red', textAlign: 'center' }}>{error}</p>
+        <div style={{ maxWidth: '420px', margin: '100px auto', padding: '32px', textAlign: 'center', background: '#fffdf6', border: '1px solid #e7dec2', borderRadius: '16px' }}>
+          <p className="eyebrow">Admin access</p>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontWeight: 400 }}>Sign in to continue</h1>
+          <p style={{ color: '#557064', lineHeight: 1.6 }}>{error}</p>
+          <Link className="button" href="/auth/login">Go to admin login</Link>
+        </div>
       </div>
     )
   }

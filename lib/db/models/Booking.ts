@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IBooking extends Document {
   orderId: string
-  userId: mongoose.Types.ObjectId
+  userId?: mongoose.Types.ObjectId
   mealType: 'veg' | 'non-veg'
   planType: 'trial' | 'monthly'
   price: number
@@ -13,7 +13,6 @@ export interface IBooking extends Document {
   deliveryDays: string[]
   userEmail?: string
   userName?: string
-  building?: string
   pickupPoint?: string
   createdAt: Date
   updatedAt: Date
@@ -29,7 +28,6 @@ const bookingSchema = new Schema<IBooking>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
     mealType: {
       type: String,
@@ -72,10 +70,6 @@ const bookingSchema = new Schema<IBooking>(
       default: '',
     },
     userName: {
-      type: String,
-      default: '',
-    },
-    building: {
       type: String,
       default: '',
     },

@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
           email: user.email,
           name: user.name,
           phone: user.phone,
-          building: user.building,
           pickupPoint: user.pickupPoint,
           role: user.role,
         },

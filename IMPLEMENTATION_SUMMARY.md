@@ -182,7 +182,7 @@ User receives email with:
 ## 🎮 Test Everything
 
 ### Test User Signup
-1. Go to http://localhost:3000/auth/signup
+1. Open your deployment URL and go to `/auth/signup`
 2. Fill form: Name, Email, Phone, Password
 3. Click "Create account & continue"
 4. Should redirect to `/order` and token saved
@@ -196,9 +196,9 @@ User receives email with:
 
 ### Test Admin Dashboard
 1. Need admin account (manually create in MongoDB with role: "admin")
-2. Go to http://localhost:3000/auth/login
+2. Open your deployment URL and go to `/auth/login`
 3. Login with admin account
-4. Redirects to http://localhost:3000/admin
+4. Redirects to `/admin`
 5. See metrics and all bookings in table
 6. Can update status and payment in dropdowns
 
@@ -305,8 +305,7 @@ EMAIL_PASSWORD=your_app_password
 EMAIL_FROM=noreply@grandmaslunchbox.com
 
 # App
-NEXT_PUBLIC_API_URL=http://localhost:3000
-NODE_ENV=development
+NODE_ENV=production
 ```
 
 ---
@@ -376,7 +375,7 @@ To understand this better:
 Everything is implemented and ready. Just:
 1. Configure `.env.local` with MongoDB & Email
 2. Run `npm run dev`
-3. Visit http://localhost:3000
+3. Visit your deployment URL
 4. Test signup → booking → admin dashboard
 
 **That's it! Your complete backend is live! 🚀**

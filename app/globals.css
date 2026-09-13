@@ -20,3 +20,20 @@
 
 /* Mobile Responsive */
 @media(max-width:560px){.form-grid{grid-template-columns:1fr}}
+
+.menu-card{max-width:760px;margin:0 auto;background:#fbf8f0;border:1px solid #ebe3cc;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px #123c4314}
+.menu-card table{min-width:0}
+.menu-card th{padding:16px 32px;color:#7c8b81;background:#f1eee0}
+.menu-card td{border-bottom:1px solid #efe9d6}
+.menu-card tr:nth-child(even) td{background:#faf5e7}
+.menu-day-cell{padding:20px 32px;width:150px;vertical-align:top;white-space:nowrap}
+.menu-day-name{display:flex;align-items:center;gap:10px;font-family:Georgia,serif;font-weight:700;font-size:17px;color:#123c2b}
+.menu-day-dot{width:8px;height:8px;border-radius:50%;background:#a83216;flex-shrink:0}
+.menu-items-cell{padding:18px 32px 18px 0;vertical-align:top}
+.menu-chips{display:flex;flex-wrap:wrap;gap:8px}
+.menu-chip{display:inline-block;padding:6px 13px;border-radius:20px;font-size:13px;font-weight:500;line-height:1.3;color:#33463a;background:#e7eedf}
+.menu-chip.veg{color:#2f5233}
+.menu-chip.nonveg{color:#a83216;background:#fbeae3;font-weight:700}
+.menu-chip.staple{color:#8a5a15;background:#fbf1dc}
+.menu-foot-note{text-align:center;padding:20px 20px 24px;margin:0;font-size:12.5px;color:#8a7660}
+@media(max-width:560px){.menu-card th{padding:14px 18px}.menu-day-cell{padding:18px;width:110px}.menu-items-cell{padding:16px 18px 16px 0}.menu-day-name{font-size:15px}.menu-chip{font-size:12px;padding:5px 10px}}

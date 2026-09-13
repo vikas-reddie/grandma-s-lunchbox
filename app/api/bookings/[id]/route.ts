@@ -11,10 +11,11 @@ const updateBookingSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB()
+    const { id } = await params
 
     // Get token from Authorization header
     const authHeader = request.headers.get('authorization')
@@ -35,7 +36,7 @@ export async function GET(
       )
     }
 
-    const booking = await Booking.findById(params.id)
+    const booking = await Booking.findById(id)
     if (!booking) {
       return NextResponse.json(
         { error: 'Booking not found' },
@@ -63,10 +64,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB()
+    const { id } = await params
 
     // Get token from Authorization header
     const authHeader = request.headers.get('authorization')
@@ -90,7 +92,7 @@ export async function PATCH(
     const body = await request.json()
     const updateData = updateBookingSchema.parse(body)
 
-    const booking = await Booking.findById(params.id)
+    const booking = await Booking.findById(id)
     if (!booking) {
       return NextResponse.json(
         { error: 'Booking not found' },
@@ -137,10 +139,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB()
+    const { id } = await params
 
     // Get token from Authorization header
     const authHeader = request.headers.get('authorization')
@@ -161,7 +164,7 @@ export async function DELETE(
       )
     }
 
-    const booking = await Booking.findById(params.id)
+    const booking = await Booking.findById(id)
     if (!booking) {
       return NextResponse.json(
         { error: 'Booking not found' },
@@ -177,7 +180,7 @@ export async function DELETE(
       )
     }
 
-    await Booking.deleteOne({ _id: params.id })
+    await Booking.deleteOne({ _id: id })
 
     return NextResponse.json(
       { message: 'Booking deleted successfully' },

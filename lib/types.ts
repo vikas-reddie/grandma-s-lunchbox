@@ -11,7 +11,6 @@ export interface User {
   email: string
   name: string
   phone: string
-  building?: string
   pickupPoint?: string
   role: 'customer' | 'admin'
   createdAt?: string
@@ -74,7 +73,6 @@ export interface AuthResponse {
 export interface CreateBookingRequest {
   mealType: 'veg' | 'non-veg'
   planType: 'trial' | 'monthly'
-  building: string
   pickupPoint: string
 }
 
