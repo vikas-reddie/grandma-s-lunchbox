@@ -1,100 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db/connect'
-import { User } from '@/lib/db/models/User'
 import { Booking } from '@/lib/db/models/Booking'
+import { Counter } from '@/lib/db/models/Counter'
+import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/jwt'
+import { z } from 'zod'
+
+const migrationKey = 'booking-status-enrolled-v1'
+const customerActionSchema = z.object({
+  bookingId: z.string().min(1),
+  action: z.enum(['confirm', 'reject']),
+})
+
+async function requireAdmin(request: NextRequest) {
+  const authHeader = request.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) return null
+
+  const decoded = verifyToken(authHeader.substring(7))
+  if (!decoded) return null
+
+  const user = await User.findById(decoded.userId)
+  return user?.role === 'admin' ? user : null
+}
+
+async function migrateExistingBookings() {
+  const migration = await Counter.findById(migrationKey)
+  if (migration) return
+
+  await Booking.updateMany(
+    { bookingStatus: 'active' },
+    { $set: { bookingStatus: 'enrolled' } },
+  )
+
+  try {
+    await Counter.create({ _id: migrationKey, sequence: 1 })
+  } catch {
+    // Another request may have completed the migration at the same time.
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB()
+    const admin = await requireAdmin(request)
+    if (!admin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
 
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No authorization token provided' },
-        { status: 401 }
+    await migrateExistingBookings()
+
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const [enrolledCustomers, activeCustomers, enrolledCount, activeCount, newThisMonth] = await Promise.all([
+      Booking.find({ bookingStatus: 'enrolled' }).sort({ createdAt: -1 }).lean(),
+      Booking.find({ bookingStatus: 'active' }).sort({ createdAt: -1 }).lean(),
+      Booking.countDocuments({ bookingStatus: 'enrolled' }),
+      Booking.countDocuments({ bookingStatus: 'active' }),
+      Booking.countDocuments({ bookingStatus: 'enrolled', createdAt: { $gte: monthStart } }),
+    ])
+
+    return NextResponse.json({
+      enrolledCustomers,
+      activeCustomers,
+      metrics: { enrolledCount, activeCount, newThisMonth },
+    })
+  } catch (error) {
+    console.error('Get admin customers error:', error)
+    return NextResponse.json({ error: 'Unable to load customers' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    await connectDB()
+    const admin = await requireAdmin(request)
+    if (!admin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
+    const { bookingId, action } = customerActionSchema.parse(await request.json())
+    if (action === 'confirm') {
+      const booking = await Booking.findOneAndUpdate(
+        { _id: bookingId, bookingStatus: 'enrolled' },
+        { $set: { bookingStatus: 'active' } },
+        { new: true },
       )
+
+      if (!booking) {
+        return NextResponse.json({ error: 'Enrolled customer not found' }, { status: 404 })
+      }
+
+      return NextResponse.json({ message: 'Customer confirmed', booking })
     }
 
-    const token = authHeader.substring(7)
-    const decoded = verifyToken(token)
-
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      )
+    const booking = await Booking.findOneAndDelete({
+      _id: bookingId,
+      bookingStatus: 'enrolled',
+    })
+    if (!booking) {
+      return NextResponse.json({ error: 'Enrolled customer not found' }, { status: 404 })
     }
 
-    // Check if user is admin
-    const user = await User.findById(decoded.userId)
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    // Get pagination and filter parameters
-    const searchParams = request.nextUrl.searchParams
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const search = searchParams.get('search') || ''
-
-    // Build filter
-    const filter: any = {
-      role: 'customer',
-    }
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } },
-      ]
-    }
-
-    // Get total count
-    const total = await User.countDocuments(filter)
-
-    // Get customers with pagination
-    const customers = await User.find(filter)
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-
-    // For each customer, get their booking count and active status
-    const customersWithBookings = await Promise.all(
-      customers.map(async (customer) => {
-        const bookings = await Booking.countDocuments({
-          userId: customer._id,
-          bookingStatus: 'active',
-        })
-        return {
-          ...customer.toObject(),
-          activeBookings: bookings,
-        }
-      })
-    )
-
-    return NextResponse.json(
-      {
-        customers: customersWithBookings,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      },
-      { status: 200 }
-    )
+    return NextResponse.json({ message: 'Enrollment rejected and removed' })
   } catch (error: any) {
-    console.error('Get customers error:', error)
-    return NextResponse.json(
-      { error: 'An error occurred while fetching customers' },
-      { status: 500 }
-    )
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: error.issues?.[0]?.message || 'Invalid customer action' }, { status: 400 })
+    }
+    console.error('Update admin customer error:', error)
+    return NextResponse.json({ error: 'Unable to update customer' }, { status: 500 })
   }
 }

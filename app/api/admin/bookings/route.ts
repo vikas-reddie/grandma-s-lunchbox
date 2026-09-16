@@ -6,7 +6,7 @@ import { verifyToken } from '@/lib/auth/jwt'
 import { z } from 'zod'
 
 const updateBookingSchema = z.object({
-  bookingStatus: z.enum(['active', 'paused', 'cancelled', 'expired']).optional(),
+  bookingStatus: z.enum(['enrolled', 'active', 'paused', 'cancelled', 'expired']).optional(),
   paymentStatus: z.enum(['pending', 'paid', 'failed']).optional(),
 })
 

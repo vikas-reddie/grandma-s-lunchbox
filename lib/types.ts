@@ -26,11 +26,12 @@ export interface Booking {
   planType: 'trial' | 'monthly'
   price: number
   paymentStatus: 'pending' | 'paid' | 'failed'
-  bookingStatus: 'active' | 'paused' | 'cancelled' | 'expired'
+  bookingStatus: 'enrolled' | 'active' | 'paused' | 'cancelled' | 'expired'
   startDate: string | Date
   endDate?: string | Date | null
   deliveryDays?: string[]
   userEmail?: string
+  userPhone?: string
   userName?: string
   building?: string
   pickupPoint?: string

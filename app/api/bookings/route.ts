@@ -112,10 +112,11 @@ export async function POST(request: NextRequest) {
       planType,
       price,
       paymentStatus: 'pending',
-      bookingStatus: 'active',
+      bookingStatus: 'enrolled',
       startDate,
       endDate: planType === 'trial' ? endDate : null,
       userEmail: email || user?.email || '',
+      userPhone: phone,
       userName: user?.name || name,
       pickupPoint,
     })
@@ -127,6 +128,11 @@ export async function POST(request: NextRequest) {
       userEmail: booking.userEmail || '(none)',
     })
     await booking.save()
+    // Keep guest phone numbers persisted even when a long-running dev process has an older cached model.
+    await Booking.collection.updateOne(
+      { _id: booking._id },
+      { $set: { userPhone: phone } },
+    )
     console.log('[BOOKING] Booking saved:', {
       id: booking._id.toString(),
       orderId: booking.orderId,

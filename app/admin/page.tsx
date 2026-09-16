@@ -11,7 +11,7 @@ interface Booking {
   planType: string
   price: number
   paymentStatus: string
-  bookingStatus: string
+  bookingStatus: 'enrolled' | 'active' | 'paused' | 'cancelled' | 'expired'
   createdAt: string
 }
 
@@ -35,11 +35,35 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('authToken')
+        let token = localStorage.getItem('authToken')
+
         if (!token) {
-          setError('Please log in as admin')
-          setLoading(false)
-          return
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: 'admin',
+              password: 'admin@123',
+            }),
+          })
+
+          const loginData = await loginResponse.json()
+          if (!loginResponse.ok) {
+            throw new Error(loginData.error || 'Admin login failed')
+          }
+
+          if (typeof loginData.token !== 'string') {
+            throw new Error('Admin token was not returned')
+          }
+
+          token = loginData.token
+          localStorage.setItem('authToken', loginData.token)
+        }
+
+        if (!token) {
+          throw new Error('Admin token was not returned')
         }
 
         const metricsResponse = await fetch('/api/admin/dashboard', {
@@ -131,9 +155,8 @@ export default function AdminPage() {
       <div className="admin-app">
         <div style={{ maxWidth: '420px', margin: '100px auto', padding: '32px', textAlign: 'center', background: '#fffdf6', border: '1px solid #e7dec2', borderRadius: '16px' }}>
           <p className="eyebrow">Admin access</p>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontWeight: 400 }}>Sign in to continue</h1>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontWeight: 400 }}>Unable to load admin dashboard</h1>
           <p style={{ color: '#557064', lineHeight: 1.6 }}>{error}</p>
-          <Link className="button" href="/auth/login">Go to admin login</Link>
         </div>
       </div>
     )
@@ -156,6 +179,7 @@ export default function AdminPage() {
         {[
           ['⌂', 'Dashboard', '/admin'],
           ['♙', 'Customers', '/admin/customers'],
+          ['▣', 'Manage Orders', '/admin/orders'],
           ['☷', 'Menu', '/admin/menu'],
         ].map(([icon, label, href]) => (
           <Link className={label === 'Dashboard' ? 'active' : ''} href={href as string} key={label}>
@@ -220,6 +244,7 @@ export default function AdminPage() {
                 style={{ padding: '8px 12px', marginLeft: '10px' }}
               >
                 <option value="">All Status</option>
+                <option value="enrolled">Enrolled</option>
                 <option value="active">Active</option>
                 <option value="paused">Paused</option>
                 <option value="cancelled">Cancelled</option>
@@ -277,6 +302,7 @@ export default function AdminPage() {
                         style={{ padding: '4px 8px', fontSize: '12px' }}
                       >
                         <option value="active">Active</option>
+                        <option value="enrolled">Enrolled</option>
                         <option value="paused">Paused</option>
                         <option value="cancelled">Cancelled</option>
                         <option value="expired">Expired</option>

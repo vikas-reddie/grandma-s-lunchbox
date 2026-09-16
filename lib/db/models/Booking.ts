@@ -7,11 +7,12 @@ export interface IBooking extends Document {
   planType: 'trial' | 'monthly'
   price: number
   paymentStatus: 'pending' | 'paid' | 'failed'
-  bookingStatus: 'active' | 'paused' | 'cancelled' | 'expired'
+  bookingStatus: 'enrolled' | 'active' | 'paused' | 'cancelled' | 'expired'
   startDate: Date
   endDate: Date | null
   deliveryDays: string[]
   userEmail?: string
+  userPhone?: string
   userName?: string
   pickupPoint?: string
   createdAt: Date
@@ -50,8 +51,8 @@ const bookingSchema = new Schema<IBooking>(
     },
     bookingStatus: {
       type: String,
-      enum: ['active', 'paused', 'cancelled', 'expired'],
-      default: 'active',
+      enum: ['enrolled', 'active', 'paused', 'cancelled', 'expired'],
+      default: 'enrolled',
     },
     startDate: {
       type: Date,
@@ -66,6 +67,10 @@ const bookingSchema = new Schema<IBooking>(
       default: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
     },
     userEmail: {
+      type: String,
+      default: '',
+    },
+    userPhone: {
       type: String,
       default: '',
     },
