@@ -40,6 +40,7 @@ async function getAdminToken() {
 }
 
 export default function ManageOrdersPage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [date, setDate] = useState(todayValue)
   const [search, setSearch] = useState('')
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
@@ -112,7 +113,8 @@ export default function ManageOrdersPage() {
 
   return (
     <div className="delivery-admin-shell">
-      <aside className="sidebar">
+      <button className="mobile-admin-menu" onClick={() => setMobileNavOpen(current => !current)} aria-expanded={mobileNavOpen} aria-controls="admin-sidebar">☰ <span>Menu</span></button>
+      <aside id="admin-sidebar" className={`sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
         <div className="admin-brand"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2005_02_26%20PM-nfLMqUqsIl5jluhhngWFv1fIGayTQN.png" alt="Grandma&apos;s Lunchbox logo" /><b>Grandma&apos;s<br />Lunchbox</b></div>
         <p className="side-label">OPERATIONS</p>
         {[

@@ -51,6 +51,7 @@ const sections: Record<string, { eyebrow: string; title: string; description: st
 
 export default function AdminSection() {
   const params = useParams<{ section: string }>()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const sectionKey = params.section === 'menu' ? 'menu' : 'customers'
   const section = sections[sectionKey]
   const [items, setItems] = useState(menuItems)
@@ -143,7 +144,8 @@ export default function AdminSection() {
 
   return (
     <div className="admin-app">
-      <aside className="sidebar">
+      <button className="mobile-admin-menu" onClick={() => setMobileNavOpen(current => !current)} aria-expanded={mobileNavOpen} aria-controls="admin-sidebar">☰ <span>Menu</span></button>
+      <aside id="admin-sidebar" className={`sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
         <div className="admin-brand"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2005_02_26%20PM-nfLMqUqsIl5jluhhngWFv1fIGayTQN.png" alt="Grandma&apos;s Lunchbox logo" /><b>Grandma&apos;s<br />Lunchbox</b></div>
         <p className="side-label">OPERATIONS</p>
         {nav.map(([icon, label, href]) => <Link className={href === `/admin/${params.section}` ? 'active' : ''} href={href} key={label}><span>{icon}</span>{label}</Link>)}

@@ -24,6 +24,7 @@ interface Metrics {
 }
 
 export default function AdminPage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [query, setQuery] = useState('')
@@ -164,7 +165,8 @@ export default function AdminPage() {
 
   return (
     <div className="admin-app">
-      <aside className="sidebar">
+      <button className="mobile-admin-menu" onClick={() => setMobileNavOpen(current => !current)} aria-expanded={mobileNavOpen} aria-controls="admin-sidebar">☰ <span>Menu</span></button>
+      <aside id="admin-sidebar" className={`sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
         <div className="admin-brand">
           <img
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2005_02_26%20PM-nfLMqUqsIl5jluhhngWFv1fIGayTQN.png"
