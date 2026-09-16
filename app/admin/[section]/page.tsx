@@ -11,11 +11,11 @@ const nav = [
 ]
 
 const menuItems = [
-  { day: 'Monday', dish: 'Rice, Dal Curry, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
-  { day: 'Tuesday', dish: 'Rice, Sambar, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
-  { day: 'Wednesday', dish: 'Rice, Dal Curry, Paneer (Veg) / Chicken (Non-Veg), Chapathi, Curd, Pickle', side: '', type: 'Both' },
-  { day: 'Thursday', dish: 'Rice, Sambar, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
-  { day: 'Friday', dish: 'Rice, Dal Curry, Vegetable Fry, Chapathi, Curd, Pickle', side: '', type: 'Veg' },
+  { day: 'Monday', dish: 'Rice, Dal Curry, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
+  { day: 'Tuesday', dish: 'Rice, Sambar, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
+  { day: 'Wednesday', dish: 'Rice, Dal Curry, Paneer (Veg) / Chicken (Non-Veg), Curd, Pickle, Papad', side: '', type: 'Both' },
+  { day: 'Thursday', dish: 'Rice, Sambar, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
+  { day: 'Friday', dish: 'Rice, Dal Curry, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
 ]
 
 const sections: Record<string, { eyebrow: string; title: string; description: string; stats: [string, string, string][] }> = {

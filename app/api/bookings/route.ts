@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate price
-    const price = planType === 'trial' ? 299 : 1299
+    const price = planType === 'trial' ? 399 : 1499
 
     // Generate order ID
     const orderId = await generateOrderId()

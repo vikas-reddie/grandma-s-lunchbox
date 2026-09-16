@@ -18,7 +18,9 @@ export default function OrderPage() {
   const [submitted, setSubmitted] = useState(false)
   const [orderId, setOrderId] = useState('')
 
-  const price = plan === 'trial' ? '₹299' : '₹1,299'
+  const trialPrice = '₹399'
+  const monthlyPrice = '₹1,499'
+  const price = plan === 'trial' ? trialPrice : monthlyPrice
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,7 +88,7 @@ export default function OrderPage() {
           <p className="eyebrow">You&apos;re all set</p>
           <h1>Order received.</h1>
           <p>
-            Your order <b>{orderId}</b> is confirmed. You&apos;ll pay ₹{plan === 'trial' ? '299' : '1,299'} on the first day your lunch is delivered.
+            Your order <b>{orderId}</b> is confirmed. You&apos;ll pay ₹{plan === 'trial' ? '399' : '1,499'} on the first day your lunch is delivered.
           </p>
           <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
             A confirmation email has been sent to your email address.
@@ -160,7 +162,7 @@ export default function OrderPage() {
                 onClick={() => setPlan('trial')}
               >
                 <b>5-Day Trial</b>
-                <small>{price} on delivery</small>
+                <small>{trialPrice} on delivery</small>
               </button>
               <button
                 type="button"
@@ -168,7 +170,7 @@ export default function OrderPage() {
                 onClick={() => setPlan('monthly')}
               >
                 <b>Monthly Plan</b>
-                <small>{price} per month</small>
+                <small>{monthlyPrice} per month</small>
               </button>
             </div>
           </fieldset>
