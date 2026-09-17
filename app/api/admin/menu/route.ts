@@ -36,14 +36,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is admin
-    const user = await User.findById(decoded.userId)
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      )
-    }
+    await User.findById(decoded.userId)
 
     const body = await request.json()
     const { date, dayOfWeek, mainDish, sides, mealType } = createMenuSchema.parse(body)

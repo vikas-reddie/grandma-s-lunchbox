@@ -113,23 +113,9 @@ export default function AdminSection() {
 
     const loadCustomers = async () => {
       try {
-        let token = localStorage.getItem('authToken')
-        if (!token) {
-          const loginResponse = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: 'admin', password: 'admin@123' }),
-          })
-          const loginData = await loginResponse.json()
-          if (!loginResponse.ok || typeof loginData.token !== 'string') {
-            throw new Error(loginData.error || 'Admin login failed')
-          }
-          token = loginData.token
-          localStorage.setItem('authToken', loginData.token)
-        }
-
+        const token = localStorage.getItem('authToken')
         const response = await fetch('/api/admin/customers', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || 'Unable to load customers')
@@ -182,10 +168,9 @@ export default function AdminSection() {
       const token = localStorage.getItem('authToken')
       const response = await fetch('/api/admin/customers', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: token
+          ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+          : { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingId, action }),
       })
       const data = await response.json()

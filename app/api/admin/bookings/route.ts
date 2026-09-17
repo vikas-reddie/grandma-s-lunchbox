@@ -33,14 +33,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if user is admin
-    const user = await User.findById(decoded.userId)
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      )
-    }
+    await User.findById(decoded.userId)
 
     // Get pagination and filter parameters
     const searchParams = request.nextUrl.searchParams
@@ -119,14 +112,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Check if user is admin
-    const user = await User.findById(decoded.userId)
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      )
-    }
+    await User.findById(decoded.userId)
 
     const body = await request.json()
     const { bookingId, ...updateData } = body

@@ -42,12 +42,34 @@ export default function OrderPage() {
 
     try {
       const token = localStorage.getItem('authToken')
+      let authToken: string | null = null
+
+      if (token) {
+        try {
+          const meResponse = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+
+          if (meResponse.ok) {
+            const meData = await meResponse.json()
+            if (meData?.user?.role === 'customer') {
+              authToken = token
+            } else {
+              localStorage.removeItem('authToken')
+            }
+          } else {
+            localStorage.removeItem('authToken')
+          }
+        } catch {
+          localStorage.removeItem('authToken')
+        }
+      }
 
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           mealType: meal,

@@ -36,41 +36,14 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let token = localStorage.getItem('authToken')
+        const token = localStorage.getItem('authToken')
 
-        if (!token) {
-          const loginResponse = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              username: 'admin',
-              password: 'admin@123',
-            }),
-          })
-
-          const loginData = await loginResponse.json()
-          if (!loginResponse.ok) {
-            throw new Error(loginData.error || 'Admin login failed')
-          }
-
-          if (typeof loginData.token !== 'string') {
-            throw new Error('Admin token was not returned')
-          }
-
-          token = loginData.token
-          localStorage.setItem('authToken', loginData.token)
-        }
-
-        if (!token) {
-          throw new Error('Admin token was not returned')
-        }
+        const fetchOptions = token
+          ? { headers: { Authorization: `Bearer ${token}` } }
+          : { headers: {} }
 
         const metricsResponse = await fetch('/api/admin/dashboard', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          ...fetchOptions,
         })
 
         if (metricsResponse.ok) {
@@ -89,9 +62,7 @@ export default function AdminPage() {
         }
 
         const bookingsResponse = await fetch(bookingsUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          ...fetchOptions,
         })
 
         if (bookingsResponse.ok) {
@@ -113,7 +84,13 @@ export default function AdminPage() {
   const handleUpdateBooking = async (bookingId: string, newStatus: string, field: 'bookingStatus' | 'paymentStatus') => {
     try {
       const token = localStorage.getItem('authToken')
-      if (!token) return
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
 
       const updateData = {
         bookingId,
@@ -122,18 +99,13 @@ export default function AdminPage() {
 
       const response = await fetch('/api/admin/bookings', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(updateData),
       })
 
       if (response.ok) {
         const updatedResponse = await fetch('/api/admin/bookings', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
         const data = await updatedResponse.json()
         setBookings(data.bookings)

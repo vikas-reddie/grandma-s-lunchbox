@@ -13,18 +13,7 @@ const nav = [
 ]
 
 async function getAdminToken() {
-  let token = localStorage.getItem('authToken')
-  if (token) return token
-  const response = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin@123' }),
-  })
-  const data = await response.json()
-  if (!response.ok || typeof data.token !== 'string') throw new Error(data.error || 'Admin login failed')
-  token = data.token
-  localStorage.setItem('authToken', data.token)
-  return token
+  return localStorage.getItem('authToken') || ''
 }
 
 export default function SettingsPage() {
@@ -40,7 +29,7 @@ export default function SettingsPage() {
     const loadSettings = async () => {
       try {
         const token = await getAdminToken()
-        const response = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
+        const response = await fetch('/api/admin/settings', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || 'Unable to load settings')
         setSettings(data)
@@ -73,7 +62,9 @@ export default function SettingsPage() {
       const token = await getAdminToken()
       const response = await fetch('/api/admin/settings', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: token
+          ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+          : { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       })
       const data = await response.json()

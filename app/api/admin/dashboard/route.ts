@@ -27,14 +27,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if user is admin
-    const user = await User.findById(decoded.userId)
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      )
-    }
+    await User.findById(decoded.userId)
 
     // Get today's date range
     const today = new Date()

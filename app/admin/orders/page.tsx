@@ -23,21 +23,7 @@ function todayValue() {
 }
 
 async function getAdminToken() {
-  let token = localStorage.getItem('authToken')
-  if (token) return token
-
-  const response = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin@123' }),
-  })
-  const data = await response.json()
-  if (!response.ok || typeof data.token !== 'string') {
-    throw new Error(data.error || 'Admin login failed')
-  }
-  token = data.token
-  localStorage.setItem('authToken', data.token)
-  return token
+  return localStorage.getItem('authToken') || ''
 }
 
 export default function ManageOrdersPage() {
@@ -58,7 +44,7 @@ export default function ManageOrdersPage() {
     try {
       const token = await getAdminToken()
       const response = await fetch(`/api/admin/deliveries?date=${encodeURIComponent(date)}&search=${encodeURIComponent(search)}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Unable to load deliveries')
@@ -89,7 +75,9 @@ export default function ManageOrdersPage() {
       const token = await getAdminToken()
       const response = await fetch('/api/admin/deliveries', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: token
+          ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+          : { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deliveryId: delivery.deliveryId, action }),
       })
       const data = await response.json()

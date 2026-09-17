@@ -88,4 +88,8 @@ const bookingSchema = new Schema<IBooking>(
   }
 )
 
+if (mongoose.models.Booking) {
+  delete mongoose.models.Booking
+}
+
 export const Booking = mongoose.models.Booking || mongoose.model<IBooking>('Booking', bookingSchema)

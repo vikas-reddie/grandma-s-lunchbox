@@ -26,18 +26,23 @@ export async function POST(request: NextRequest) {
       ? await User.findOne({ $or: [{ username }, { email: username }] })
       : await User.findOne({ email })
 
-    if (!user && username === adminUsername && password === adminPassword) {
-      user = await User.findOne({ email: adminEmail })
+    if (username === adminUsername && password === adminPassword) {
+      user = await User.findOne({ email: adminEmail }) || user
+
       if (user) {
+        const needsAdminSync = !user.name || user.name === 'Administrator' || user.name === adminUsername
         user.username = adminUsername
         user.role = 'admin'
         user.password = await hashPassword(adminPassword)
+        if (needsAdminSync) {
+          user.name = adminUsername
+        }
         await user.save()
       } else {
         user = await User.create({
           username: adminUsername,
           email: adminEmail,
-          name: 'Administrator',
+          name: adminUsername,
           phone: '0000000000',
           password: await hashPassword(adminPassword),
           role: 'admin',
