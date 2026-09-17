@@ -9,14 +9,57 @@ const nav = [
   ['♙', 'Customers', '/admin/customers'],
   ['▣', 'Manage Orders', '/admin/orders'],
   ['☷', 'Menu', '/admin/menu'],
+  ['⚙', 'Settings', '/admin/settings'],
 ]
 
-const menuItems = [
-  { day: 'Monday', dish: 'Rice, Dal Curry, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
-  { day: 'Tuesday', dish: 'Rice, Sambar, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
-  { day: 'Wednesday', dish: 'Rice, Dal Curry, Paneer (Veg) / Chicken (Non-Veg), Curd, Pickle, Papad', side: '', type: 'Both' },
-  { day: 'Thursday', dish: 'Rice, Sambar, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
-  { day: 'Friday', dish: 'Rice, Dal Curry, Vegetable Fry, Curd, Pickle, Papad', side: '', type: 'Veg' },
+type MenuChipType = 'staple' | 'veg' | 'nonveg'
+
+type WeeklyMenuDay = {
+  day: string
+  items: Array<{ label: string; type: MenuChipType }>
+}
+
+const defaultWeeklyMenu: WeeklyMenuDay[] = [
+  { day: 'Monday', items: [
+    { label: 'Rice', type: 'staple' },
+    { label: 'Dal Curry', type: 'veg' },
+    { label: 'Vegetable Fry', type: 'veg' },
+    { label: 'Curd', type: 'staple' },
+    { label: 'Pickle', type: 'staple' },
+    { label: 'Papad', type: 'staple' },
+  ] },
+  { day: 'Tuesday', items: [
+    { label: 'Rice', type: 'staple' },
+    { label: 'Sambar', type: 'veg' },
+    { label: 'Vegetable Fry', type: 'veg' },
+    { label: 'Curd', type: 'staple' },
+    { label: 'Pickle', type: 'staple' },
+    { label: 'Papad', type: 'staple' },
+  ] },
+  { day: 'Wednesday', items: [
+    { label: 'Rice', type: 'staple' },
+    { label: 'Dal Curry', type: 'veg' },
+    { label: 'Paneer (Veg)', type: 'veg' },
+    { label: 'Chicken (Non-Veg)', type: 'nonveg' },
+    { label: 'Curd', type: 'staple' },
+    { label: 'Pickle', type: 'staple' },
+  ] },
+  { day: 'Thursday', items: [
+    { label: 'Rice', type: 'staple' },
+    { label: 'Sambar', type: 'veg' },
+    { label: 'Vegetable Fry', type: 'veg' },
+    { label: 'Curd', type: 'staple' },
+    { label: 'Pickle', type: 'staple' },
+    { label: 'Papad', type: 'staple' },
+  ] },
+  { day: 'Friday', items: [
+    { label: 'Rice', type: 'staple' },
+    { label: 'Dal Curry', type: 'veg' },
+    { label: 'Vegetable Fry', type: 'veg' },
+    { label: 'Curd', type: 'staple' },
+    { label: 'Pickle', type: 'staple' },
+    { label: 'Papad', type: 'staple' },
+  ] },
 ]
 
 interface Customer {
@@ -54,8 +97,9 @@ export default function AdminSection() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const sectionKey = params.section === 'menu' ? 'menu' : 'customers'
   const section = sections[sectionKey]
-  const [items, setItems] = useState(menuItems)
-  const [saved, setSaved] = useState(false)
+  const [items, setItems] = useState<WeeklyMenuDay[]>(defaultWeeklyMenu)
+  const [saved, setSaved] = useState(true)
+  const [draftItems, setDraftItems] = useState<Record<string, { label: string; type: MenuChipType }>>({})
   const [enrolledCustomers, setEnrolledCustomers] = useState<Customer[]>([])
   const [activeCustomers, setActiveCustomers] = useState<Customer[]>([])
   const [activeTab, setActiveTab] = useState<'enrolled' | 'active'>('enrolled')
@@ -103,9 +147,32 @@ export default function AdminSection() {
     loadCustomers()
   }, [sectionKey])
 
-  const updateItem = (index: number, field: 'dish' | 'side' | 'type', value: string) => {
-    setItems(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item))
+  const addItem = (dayIndex: number) => {
+    const dayName = items[dayIndex]?.day
+    if (!dayName) return
+    const draft = draftItems[dayName] || { label: '', type: 'staple' as MenuChipType }
+    const trimmedLabel = draft.label.trim()
+    if (!trimmedLabel) return
+
+    setItems(current => current.map((day, index) => index === dayIndex ? {
+      ...day,
+      items: [...day.items, { label: trimmedLabel, type: draft.type }],
+    } : day))
+    setDraftItems(current => ({ ...current, [dayName]: { label: '', type: 'staple' } }))
     setSaved(false)
+  }
+
+  const removeItem = (dayIndex: number, itemIndex: number) => {
+    setItems(current => current.map((day, index) => index === dayIndex ? {
+      ...day,
+      items: day.items.filter((_, filterIndex) => filterIndex !== itemIndex),
+    } : day))
+    setSaved(false)
+  }
+
+  const saveMenu = () => {
+    window.localStorage.setItem('grandmas-admin-menu', JSON.stringify(items))
+    setSaved(true)
   }
 
   const handleCustomerAction = async (bookingId: string, action: 'confirm' | 'reject') => {
@@ -154,7 +221,15 @@ export default function AdminSection() {
       <main className="admin-main">
         <header className="admin-top"><div><p className="eyebrow">Thursday, 17 September 2026</p><h1>{section.title}</h1></div><div className="top-actions"><span className="mock-chip">Live dashboard</span><button className="icon-btn" aria-label="Search">⌕</button><button className="icon-btn" aria-label="Notifications">♧</button></div></header>
         <div className="admin-content">
-          <div className="admin-section-head"><div><p className="eyebrow">{section.eyebrow}</p><h2>{section.title}</h2><p className="section-description">{section.description}</p></div></div>
+          {sectionKey === 'menu' ? (
+            <div className="menu-admin-header">
+              <p className="menu-admin-kicker">{section.eyebrow}</p>
+              <h2 className="menu-admin-title">{section.title}</h2>
+              <p className="menu-admin-description">{section.description}</p>
+            </div>
+          ) : (
+            <div className="admin-section-head"><div><p className="eyebrow">{section.eyebrow}</p><h2>{section.title}</h2><p className="section-description">{section.description}</p></div></div>
+          )}
           {sectionKey === 'customers' ? (
             loading ? <p>Loading customers...</p> : error && enrolledCustomers.length === 0 && activeCustomers.length === 0 ? <p className="section-description">{error}</p> : (
               <>
@@ -194,8 +269,44 @@ export default function AdminSection() {
             )
           ) : (
             <>
-              <div className="metric-grid"><div className="metric"><span>This week&apos;s dishes</span><strong>5</strong><small>One dish per weekday</small></div><div className="metric"><span>Veg dishes</span><strong>3</strong><small>Popular with subscribers</small></div><div className="metric"><span>Next menu update</span><strong>Friday</strong><small>Review upcoming week</small></div></div>
-              <div className="admin-panel menu-editor"><div className="admin-section-head"><div><p className="eyebrow">Weekly menu</p><h2>Edit lunch offerings</h2><p className="section-description">Update dishes, sides, and meal type for each weekday.</p></div><button className="button small" onClick={() => setSaved(true)}>{saved ? 'Saved' : 'Save menu'}</button></div><div className="table-wrap"><table><thead><tr><th>Day</th><th>Main dish</th><th>Sides</th><th>Meal type</th></tr></thead><tbody>{items.map((item, index) => <tr key={item.day}><td><strong>{item.day}</strong></td><td><input aria-label={`${item.day} main dish`} value={item.dish} onChange={event => updateItem(index, 'dish', event.target.value)} /></td><td><input aria-label={`${item.day} sides`} value={item.side} onChange={event => updateItem(index, 'side', event.target.value)} /></td><td><select aria-label={`${item.day} meal type`} value={item.type} onChange={event => updateItem(index, 'type', event.target.value)}><option>Veg</option><option>Non-Veg</option></select></td></tr>)}</tbody></table></div></div>
+              <div className="admin-panel menu-editor">
+                <div className="menu-editor-toolbar"><button className="button small" type="button" onClick={saveMenu}>{saved ? 'Saved' : 'Save menu'}</button></div>
+                <div className="menu-editor-grid">
+                  {items.map((day, dayIndex) => {
+                    const draft = draftItems[day.day] || { label: '', type: 'staple' as MenuChipType }
+
+                    return <div className="menu-editor-day" key={day.day}>
+                      <div className="menu-day-header"><span className="menu-day-name"><span className="menu-day-dot" />{day.day}</span></div>
+                      <div className="menu-chips">
+                        {day.items.map((item, itemIndex) => (
+                          <span className={`menu-chip ${item.type}`} key={`${day.day}-${item.label}-${itemIndex}`}>
+                            {item.label}
+                            <button type="button" onClick={() => removeItem(dayIndex, itemIndex)} aria-label={`Remove ${item.label} from ${day.day}`}>×</button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="menu-add-row">
+                        <input
+                          value={draft.label}
+                          onChange={event => setDraftItems(current => ({ ...current, [day.day]: { ...draft, label: event.target.value } }))}
+                          placeholder="Add item"
+                          aria-label={`Add item for ${day.day}`}
+                        />
+                        <select
+                          value={draft.type}
+                          onChange={event => setDraftItems(current => ({ ...current, [day.day]: { ...draft, type: event.target.value as MenuChipType } }))}
+                          aria-label={`Type for ${day.day}`}
+                        >
+                          <option value="staple">Staple</option>
+                          <option value="veg">Veg</option>
+                          <option value="nonveg">Non-Veg</option>
+                        </select>
+                        <button className="button small" type="button" onClick={() => addItem(dayIndex)}>Add</button>
+                      </div>
+                    </div>
+                  })}
+                </div>
+              </div>
             </>
           )}
         </div>

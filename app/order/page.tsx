@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { AppSettings, defaultSettings } from '@/lib/config/settings'
 
 export default function OrderPage() {
   const router = useRouter()
@@ -17,9 +19,14 @@ export default function OrderPage() {
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [orderId, setOrderId] = useState('')
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings)
 
-  const trialPrice = '₹399'
-  const monthlyPrice = '₹1,499'
+  useEffect(() => {
+    fetch('/api/settings').then(response => response.json()).then(setSettings).catch(() => undefined)
+  }, [])
+
+  const trialPrice = `₹${settings.plans.trialPrice.toLocaleString('en-IN')}`
+  const monthlyPrice = `₹${settings.plans.monthlyPrice.toLocaleString('en-IN')}`
   const price = plan === 'trial' ? trialPrice : monthlyPrice
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +56,7 @@ export default function OrderPage() {
           phone,
           email,
           pickupPoint,
+          startDate,
         }),
       })
 
@@ -88,7 +96,7 @@ export default function OrderPage() {
           <p className="eyebrow">You&apos;re all set</p>
           <h1>Order received.</h1>
           <p>
-            Your order <b>{orderId}</b> is confirmed. You&apos;ll pay ₹{plan === 'trial' ? '399' : '1,499'} on the first day your lunch is delivered.
+            Your order <b>{orderId}</b> is confirmed. You&apos;ll pay {price} on the first day your lunch is delivered.
           </p>
           <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
             A confirmation email has been sent to your email address.
@@ -161,7 +169,7 @@ export default function OrderPage() {
                 className={plan === 'trial' ? 'choice selected' : 'choice'}
                 onClick={() => setPlan('trial')}
               >
-                <b>5-Day Trial</b>
+                  <b>{settings.delivery.trialDays}-Day Trial</b>
                 <small>{trialPrice} on delivery</small>
               </button>
               <button
@@ -169,7 +177,7 @@ export default function OrderPage() {
                 className={plan === 'monthly' ? 'choice selected' : 'choice'}
                 onClick={() => setPlan('monthly')}
               >
-                <b>Monthly Plan</b>
+                  <b>Monthly Plan</b>
                 <small>{monthlyPrice} per month</small>
               </button>
             </div>
@@ -220,10 +228,7 @@ export default function OrderPage() {
                   required
                 >
                   <option value="">Select pickup point</option>
-                  <option value="Main Gate">Main Gate</option>
-                  <option value="Reception">Reception</option>
-                  <option value="Cafeteria">Cafeteria</option>
-                  <option value="Parking">Parking</option>
+                  {settings.pickupPoints.map(point => <option value={point} key={point}>{point}</option>)}
                 </select>
               </div>
               <div className="form-group">

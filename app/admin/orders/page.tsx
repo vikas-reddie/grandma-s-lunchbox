@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
+import { AppSettings, defaultSettings } from '@/lib/config/settings'
 
 interface Delivery {
   deliveryId: string
@@ -49,6 +50,7 @@ export default function ManageOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState('')
   const [error, setError] = useState('')
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings)
 
   const loadDeliveries = async () => {
     setLoading(true)
@@ -69,12 +71,13 @@ export default function ManageOrdersPage() {
   }
 
   useEffect(() => {
+    fetch('/api/settings').then(response => response.json()).then(setSettings).catch(() => undefined)
     const timer = window.setTimeout(loadDeliveries, 250)
     return () => window.clearTimeout(timer)
   }, [date, search])
 
   const openPayment = async (delivery: Delivery) => {
-    const upiUrl = `upi://pay?pa=8328286804@ybl&pn=Vikas&am=${encodeURIComponent(delivery.price)}&cu=INR`
+    const upiUrl = `upi://pay?pa=${encodeURIComponent(settings.payment.upiId)}&pn=${encodeURIComponent(settings.payment.payeeName)}&am=${encodeURIComponent(delivery.price)}&cu=INR`
     setQrData(await QRCode.toDataURL(upiUrl, { width: 260, margin: 2 }))
     setSelectedDelivery(delivery)
   }
@@ -122,6 +125,7 @@ export default function ManageOrdersPage() {
           ['♙', 'Customers', '/admin/customers'],
           ['▣', 'Manage Orders', '/admin/orders'],
           ['☷', 'Menu', '/admin/menu'],
+          ['⚙', 'Settings', '/admin/settings'],
         ].map(([icon, label, href]) => <a className={href === '/admin/orders' ? 'active' : ''} href={href} key={label}><span>{icon}</span>{label}</a>)}
         <div className="side-bottom"><span className="avatar">AD</span><div><b>Admin</b><small>Dashboard</small></div></div>
       </aside>

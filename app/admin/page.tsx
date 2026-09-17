@@ -183,6 +183,7 @@ export default function AdminPage() {
           ['♙', 'Customers', '/admin/customers'],
           ['▣', 'Manage Orders', '/admin/orders'],
           ['☷', 'Menu', '/admin/menu'],
+          ['⚙', 'Settings', '/admin/settings'],
         ].map(([icon, label, href]) => (
           <Link className={label === 'Dashboard' ? 'active' : ''} href={href as string} key={label}>
             <span>{icon}</span>

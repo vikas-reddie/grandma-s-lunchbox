@@ -7,6 +7,8 @@ import { generateOrderId } from '@/lib/utils/generateOrderId'
 import { sendEmail } from '@/lib/email/sendEmail'
 import { orderConfirmationTemplate } from '@/lib/email/templates/orderConfirmation'
 import { z } from 'zod'
+import { Settings } from '@/lib/db/models/Settings'
+import { defaultSettings } from '@/lib/config/settings'
 
 const createBookingSchema = z.object({
   mealType: z.enum(['veg', 'non-veg']),
@@ -15,6 +17,7 @@ const createBookingSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, 'Phone must contain exactly 10 digits'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   pickupPoint: z.string().min(1, 'Pickup point is required'),
+  startDate: z.string().optional(),
 })
 
 // GET - Fetch user's bookings
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
       ...body,
       password: undefined,
     })
-    const { mealType, planType, name, phone, email, pickupPoint } = createBookingSchema.parse(body)
+    const { mealType, planType, name, phone, email, pickupPoint, startDate: startDateValue } = createBookingSchema.parse(body)
 
     let user = null
     if (authHeader?.startsWith('Bearer ')) {
@@ -92,16 +95,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate price
-    const price = planType === 'trial' ? 399 : 1499
+    const savedSettings = await Settings.findOne({ key: 'global' }).lean()
+    const plans = savedSettings?.plans || defaultSettings.plans
+    const delivery = savedSettings?.delivery || defaultSettings.delivery
+    const price = planType === 'trial' ? plans.trialPrice : plans.monthlyPrice
 
     // Generate order ID
     const orderId = await generateOrderId()
 
     // Calculate end date (trial = 5 days, monthly = 30 days from today)
-    const startDate = new Date()
-    const endDate = new Date()
+    const startDate = startDateValue ? new Date(`${startDateValue}T00:00:00+05:30`) : new Date()
+    if (Number.isNaN(startDate.getTime())) {
+      return NextResponse.json({ error: 'Invalid start date' }, { status: 400 })
+    }
+    const endDate = new Date(startDate)
     endDate.setDate(
-      endDate.getDate() + (planType === 'trial' ? 5 : 30)
+      startDate.getDate() + (planType === 'trial' ? delivery.trialDays : delivery.monthlyDays)
     )
 
     // Create booking
